@@ -21,7 +21,7 @@ export function Header() {
               Explore
             </Link>
             <a
-              href="https://github.com/VestinNetwork/rugproof-launchpad"
+              href="https://github.com/VestinNetwork/zentria"
               target="_blank"
               rel="noreferrer"
               className="text-zinc-300 hover:text-white transition"
