@@ -1,0 +1,22 @@
+export const memeTokenAbi = [
+  {type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{type: "string"}]},
+  {type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{type: "string"}]},
+  {type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{type: "uint8"}]},
+  {type: "function", name: "totalSupply", stateMutability: "view", inputs: [], outputs: [{type: "uint256"}]},
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{name: "owner", type: "address"}],
+    outputs: [{type: "uint256"}],
+  },
+  {type: "function", name: "buyTaxBps", stateMutability: "view", inputs: [], outputs: [{type: "uint16"}]},
+  {type: "function", name: "sellTaxBps", stateMutability: "view", inputs: [], outputs: [{type: "uint16"}]},
+  {type: "function", name: "maxWalletAmount", stateMutability: "view", inputs: [], outputs: [{type: "uint256"}]},
+  {type: "function", name: "maxTxAmount", stateMutability: "view", inputs: [], outputs: [{type: "uint256"}]},
+  {type: "function", name: "tradingOpen", stateMutability: "view", inputs: [], outputs: [{type: "bool"}]},
+  {type: "function", name: "limitsActive", stateMutability: "view", inputs: [], outputs: [{type: "bool"}]},
+  {type: "function", name: "owner", stateMutability: "view", inputs: [], outputs: [{type: "address"}]},
+  {type: "function", name: "devWallet", stateMutability: "view", inputs: [], outputs: [{type: "address"}]},
+  {type: "function", name: "platformTreasury", stateMutability: "view", inputs: [], outputs: [{type: "address"}]},
+] as const;
