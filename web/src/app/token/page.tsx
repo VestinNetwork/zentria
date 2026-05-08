@@ -1,6 +1,7 @@
 "use client";
 
-import {useParams} from "next/navigation";
+import {Suspense} from "react";
+import {useSearchParams} from "next/navigation";
 import {formatUnits, isAddress} from "viem";
 import {useChainId, useReadContract, useReadContracts} from "wagmi";
 import {ArrowLeft, ExternalLink, Lock, ShieldCheck, Timer} from "lucide-react";
@@ -13,11 +14,19 @@ import {memeTokenAbi} from "@/abi/memeToken";
 import {getChainConfig} from "@/lib/contracts";
 
 export default function TokenDetailPage() {
-  const params = useParams<{address: string}>();
+  return (
+    <Suspense fallback={<Centered title="Loading..." body="Resolving token details." />}>
+      <TokenDetailRoute />
+    </Suspense>
+  );
+}
+
+function TokenDetailRoute() {
+  const searchParams = useSearchParams();
   const chainId = useChainId();
   const config = getChainConfig(chainId);
 
-  const tokenAddress = params.address;
+  const tokenAddress = searchParams.get("address") ?? "";
   if (!tokenAddress || !isAddress(tokenAddress)) {
     return <Centered title="Invalid address" body="The token address in the URL is malformed." />;
   }
@@ -30,7 +39,14 @@ export default function TokenDetailPage() {
     );
   }
 
-  return <TokenDetail tokenAddress={tokenAddress} launchpadAddress={config.launchpad} lockerAddress={config.liquidityLocker} vestingAddress={config.devVesting} />;
+  return (
+    <TokenDetail
+      tokenAddress={tokenAddress}
+      launchpadAddress={config.launchpad}
+      lockerAddress={config.liquidityLocker}
+      vestingAddress={config.devVesting}
+    />
+  );
 }
 
 function TokenDetail({

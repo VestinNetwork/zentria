@@ -100,7 +100,7 @@ function LaunchCard({launch}: {launch: LaunchInfo}) {
 
   return (
     <Link
-      href={`/token/${launch.token}`}
+      href={`/token?address=${launch.token}`}
       className="block rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 hover:border-emerald-700 hover:bg-zinc-900/70 transition"
     >
       <div className="flex items-start justify-between gap-2">
