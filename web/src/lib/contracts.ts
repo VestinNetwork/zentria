@@ -28,11 +28,13 @@ export const chainConfigs: Record<number, ChainConfig> = {
     weth: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
   },
   [arbitrumSepolia.id]: {
-    launchpad: env("NEXT_PUBLIC_LAUNCHPAD_421614", ZERO),
-    liquidityLocker: env("NEXT_PUBLIC_LOCKER_421614", ZERO),
-    devVesting: env("NEXT_PUBLIC_VESTING_421614", ZERO),
-    router: env("NEXT_PUBLIC_ROUTER_421614", ZERO),
-    weth: env("NEXT_PUBLIC_WETH_421614", ZERO),
+    // Defaults below are the demo deployment on Arbitrum Sepolia.
+    // Override via NEXT_PUBLIC_*_421614 env vars when redeploying.
+    launchpad: env("NEXT_PUBLIC_LAUNCHPAD_421614", "0x7cAb69E5dC7bd5f1c3ec57a8cc382b390dDD96B9"),
+    liquidityLocker: env("NEXT_PUBLIC_LOCKER_421614", "0x8FCfD2fFDc34a7297425A541bBE4eE794907C95C"),
+    devVesting: env("NEXT_PUBLIC_VESTING_421614", "0x55575225fac885920659db05CCE1A67d0F306b8f"),
+    router: env("NEXT_PUBLIC_ROUTER_421614", "0x654a5C7504edbe37233d0797f6489e497F98a343"),
+    weth: env("NEXT_PUBLIC_WETH_421614", "0xD1c9a9D8Edb0C7A1E751320707A6bE07D5d18558"),
   },
 };
 
