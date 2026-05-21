@@ -38,6 +38,7 @@ def test_phase_3_compose_pins_ports_and_network_boundaries() -> None:
     assert compose["services"]["admin"]["ports"] == ["3100:3100"]
     assert compose["services"]["grafana"]["ports"] == ["3001:3000"]
     assert compose["networks"]["hawas-internal"]["internal"] is True
+    assert compose["services"]["traefik"]["networks"] == ["hawas-edge"]
 
 
 def test_phase_3_traefik_routes_core_surfaces() -> None:

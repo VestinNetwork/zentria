@@ -4,7 +4,7 @@
 
 - Docker Compose local topology for the 14 PRD services: Traefik, Postgres, Redis, backend, `worker-plan`, `worker-execute`, `scheduler-beat`, web, admin, OTel collector, Prometheus, Grafana, Loki, and Alertmanager.
 - Two-network boundary:
-  - `hawas-edge` for exposed services.
+  - `hawas-edge` for Traefik and routable HTTP services.
   - `hawas-internal` for DB, Redis, workers, telemetry, and service-to-service traffic.
 - Traefik routes:
   - `hawas.localhost` → operator web.
