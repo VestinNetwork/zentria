@@ -16,6 +16,8 @@ def test_phase_4_metadata_declares_prd_canonical_tables() -> None:
         "users",
         "roles",
         "user_roles",
+        "user_mfa_settings",
+        "refresh_tokens",
         "wallets",
         "intents",
         "plans",
@@ -24,6 +26,14 @@ def test_phase_4_metadata_declares_prd_canonical_tables() -> None:
         "approvals",
         "audit_events",
     }
+
+
+def test_phase_5_auth_metadata_declares_mfa_and_refresh_storage() -> None:
+    mfa = Base.metadata.tables["user_mfa_settings"]
+    refresh_tokens = Base.metadata.tables["refresh_tokens"]
+
+    assert {"user_id", "totp_secret_ciphertext", "is_enabled"}.issubset(mfa.c.keys())
+    assert {"jti", "user_id", "expires_at", "revoked_at"}.issubset(refresh_tokens.c.keys())
 
 
 def test_phase_4_intents_keep_extensible_payload_and_idempotency_key() -> None:
