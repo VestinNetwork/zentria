@@ -1,0 +1,23 @@
+{
+  "name": "@hawas/admin",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "tsc --noEmit",
+    "dev": "next dev --port 3100"
+  },
+  "dependencies": {
+    "@hawas/ui": "workspace:*",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.9.3"
+  }
+}
+

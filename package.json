@@ -1,0 +1,14 @@
+{
+  "name": "zentria",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "scripts": {
+    "check": "turbo run check",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.6.1",
+    "typescript": "^5.9.3"
+  }
+}
+

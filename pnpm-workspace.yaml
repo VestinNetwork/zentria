@@ -1,0 +1,4 @@
+packages:
+  - "projects/kiro/hawas-testnet/apps/*"
+  - "projects/kiro/hawas-testnet/packages/*"
+

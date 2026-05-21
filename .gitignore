@@ -1,0 +1,15 @@
+node_modules/
+.turbo/
+**/.turbo/
+.next/
+.venv/
+**/.venv/
+.pytest_cache/
+**/.pytest_cache/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
