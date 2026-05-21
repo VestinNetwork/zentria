@@ -1,9 +1,14 @@
+import os
 from pathlib import Path
 
+import pytest
+from alembic import command
+from alembic.config import Config
 from hawas.db.models import Base
 
 
-MIGRATION_FILE = Path(__file__).resolve().parents[1] / "migrations" / "versions" / "0001_baseline.py"
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+MIGRATION_FILE = BACKEND_ROOT / "migrations" / "versions" / "0001_baseline.py"
 
 
 def test_phase_4_metadata_declares_prd_canonical_tables() -> None:
@@ -60,3 +65,17 @@ def test_phase_4_migration_has_reversible_upgrade_and_downgrade() -> None:
     assert "def downgrade() -> None:" in migration
     assert migration.count("op.create_table(") == 10
     assert migration.count("op.drop_table(") == 10
+
+
+@pytest.mark.integration
+def test_phase_4_alembic_round_trip_against_postgres() -> None:
+    database_url = os.environ.get("HAWAS_TEST_DATABASE_URL")
+    if not database_url:
+        pytest.skip("Set HAWAS_TEST_DATABASE_URL to an empty disposable Postgres database")
+
+    config = Config(str(BACKEND_ROOT / "alembic.ini"))
+    config.set_main_option("sqlalchemy.url", database_url)
+
+    command.upgrade(config, "head")
+    command.downgrade(config, "base")
+    command.upgrade(config, "head")

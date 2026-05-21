@@ -32,3 +32,10 @@ uv run alembic upgrade head
 uv run alembic downgrade base
 uv run alembic upgrade head
 ```
+
+The automated integration test uses a disposable PostgreSQL database:
+
+```bash
+HAWAS_TEST_DATABASE_URL=postgresql+asyncpg://hawas:hawas@localhost:5433/hawas_test \
+  uv run pytest -m integration tests/test_schema_contract.py
+```
