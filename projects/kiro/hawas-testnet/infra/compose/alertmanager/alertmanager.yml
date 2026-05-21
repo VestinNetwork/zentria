@@ -1,0 +1,5 @@
+route:
+  receiver: hawas-null
+
+receivers:
+  - name: hawas-null

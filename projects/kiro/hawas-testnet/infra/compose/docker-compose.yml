@@ -1,8 +1,239 @@
+name: hawas-testnet
+
+x-backend-build: &backend-build
+  context: ../../../../..
+  dockerfile: projects/kiro/hawas-testnet/apps/backend/Dockerfile
+
+x-backend-env: &backend-env
+  HAWAS_VARIANT: testnet
+  DATABASE_URL: postgresql+asyncpg://hawas:hawas@postgres:5432/hawas
+  REDIS_URL: redis://redis:6379/0
+
 services:
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8082:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - hawas-edge
+      - hawas-internal
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hawas
+      POSTGRES_USER: hawas
+      POSTGRES_PASSWORD: hawas
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hawas-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hawas -d hawas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hawas-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
-    build:
-      context: ../../apps/backend
-    command: uvicorn hawas.main:app --host 0.0.0.0 --port 8000
+    build: *backend-build
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    networks:
+      - hawas-edge
+      - hawas-internal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hawas-api.rule: Host(`api.hawas.localhost`) || PathPrefix(`/api`)
+      traefik.http.routers.hawas-api.entrypoints: web
+      traefik.http.services.hawas-api.loadbalancer.server.port: "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  worker-plan:
+    build: *backend-build
+    environment:
+      <<: *backend-env
+      HAWAS_WORKER_QUEUE: q.plan.plan,bulk_provision
+    command: python -c "import time; print('worker-plan placeholder ready', flush=True); time.sleep(10**9)"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - hawas-internal
+
+  worker-execute:
+    build: *backend-build
+    environment:
+      <<: *backend-env
+      HAWAS_WORKER_QUEUE: q.plan.execute,fleet_reconcile
+    command: python -c "import time; print('worker-execute placeholder ready', flush=True); time.sleep(10**9)"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - hawas-internal
+
+  scheduler-beat:
+    build: *backend-build
+    environment:
+      <<: *backend-env
+      HAWAS_WORKER_ROLE: scheduler-beat
+    command: python -c "import time; print('scheduler-beat placeholder ready', flush=True); time.sleep(10**9)"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - hawas-internal
+
+  web:
+    build:
+      context: ../../../../..
+      dockerfile: projects/kiro/hawas-testnet/apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_HAWAS_API_URL: http://localhost/api
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    networks:
+      - hawas-edge
+      - hawas-internal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hawas-web.rule: Host(`hawas.localhost`)
+      traefik.http.routers.hawas-web.entrypoints: web
+      traefik.http.services.hawas-web.loadbalancer.server.port: "3000"
+
+  admin:
+    build:
+      context: ../../../../..
+      dockerfile: projects/kiro/hawas-testnet/apps/admin/Dockerfile
+    environment:
+      NEXT_PUBLIC_HAWAS_API_URL: http://localhost/api
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3100:3100"
+    networks:
+      - hawas-edge
+      - hawas-internal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hawas-admin.rule: Host(`admin.hawas.localhost`)
+      traefik.http.routers.hawas-admin.entrypoints: web
+      traefik.http.services.hawas-admin.loadbalancer.server.port: "3100"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.112.0
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./otel/otel-collector.yml:/etc/otelcol/config.yml:ro
+    networks:
+      - hawas-internal
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - hawas-edge
+      - hawas-internal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hawas-prometheus.rule: Host(`prometheus.hawas.localhost`)
+      traefik.http.routers.hawas-prometheus.entrypoints: web
+      traefik.http.services.hawas-prometheus.loadbalancer.server.port: "9090"
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - hawas-edge
+      - hawas-internal
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hawas-grafana.rule: Host(`grafana.hawas.localhost`)
+      traefik.http.routers.hawas-grafana.entrypoints: web
+      traefik.http.services.hawas-grafana.loadbalancer.server.port: "3000"
+
+  loki:
+    image: grafana/loki:3.2.1
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    networks:
+      - hawas-internal
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    networks:
+      - hawas-edge
+      - hawas-internal
+
+networks:
+  hawas-edge:
+    name: hawas-edge
+  hawas-internal:
+    name: hawas-internal
+    internal: true
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
